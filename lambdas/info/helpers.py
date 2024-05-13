@@ -46,22 +46,6 @@ IDENTIFICATION_SLOTS = {
 }
 
 SLOT_PROMPTS = {
-    'userPhone': {
-        'slotElicitationStyle': 'Default',
-        'prompts': [
-            'I didn\'t get that, please say or enter your 10-digit phone number',
-            'Your phone number should include the area code, and be ten digits in length',
-            'Sorry, I was not able to understand your phone number.'
-        ]
-    },
-    'FullAddress': {
-        'slotElicitationStyle': None,
-        'prompts': [
-            'OK, please tell me your address, including the street, city, state, and zip code.',
-            'I didn\'t get that, please tell me your new address, including the street, city, state, and zip code.',
-            'Sorry, I was not able to understand your address.'
-        ]
-    },
     'StreetAddress': {
         'slotElicitationStyle': None,
         'prompts': [
@@ -178,6 +162,34 @@ def elicit_slot_with_retries(intent, activeContexts, sessionAttributes, slotToEl
         response_message = format_message_array(message, 'PlainText')
         return elicit_slot(intent, activeContexts, sessionAttributes, required_slot, requestAttributes, slotElicitationStyle, response_message)
 
+def elicit_intent_with_retries(intent, activeContexts, sessionAttributes, requestAttributes):
+    prompts = [
+            'I didn\'t get that. Please say how you would like to receive information from us. Or, you can press one to request a physical brochure, or press two to subscribe to our email list.',
+            'Let\'s try that one more time. You can press one or say brochure if you\'d like a brochure mailed to your address, or you can press two or say email to subscribe to our email list',
+            'Sorry, I was not able to understand how you want us to send you further information. Please visit our website to put in your request.'
+        ]
+
+    tries = sessionAttributes.get('IntentElicit_retries', None)
+    if not tries:
+        tries = "0"
+
+    num_tries = int(tries)
+    num_prompts = len(prompts)
+
+    # give up with final message
+    if (num_tries+1) >= num_prompts:
+        print("END CLOSE")
+        message = prompts[num_prompts-1]
+        response_message = format_message_array(message, 'PlainText')
+        del sessionAttributes['IntentElicit_retries']
+        intent['state'] = 'Failed'
+        return close(intent, activeContexts, sessionAttributes, response_message, requestAttributes)
+    else:
+        sessionAttributes['IntentElicit_retries'] = str(num_tries+1)
+        message = prompts[num_tries]
+            
+        response_message = format_message_array(message, 'PlainText')
+        return elicit_intent(intent, activeContexts, sessionAttributes, response_message, requestAttributes)
 
 def elicit_intent(intent, activeContexts, sessionAttributes, message, requestAttributes):
     response = \

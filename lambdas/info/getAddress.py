@@ -30,7 +30,7 @@ def lambda_handler(event, context):
 
     logger.info('[{}] - Lex event info {} '.format(intent_name, json.dumps(event)))
 
-    # 3. check for ZipCode slot; elicit it if not available
+    # check for ZipCode slot; elicit it if not available
     zip_code = None
     zip_code_elicited = False
     zipCode = slot_values.get('ZipCode', None)
@@ -50,7 +50,7 @@ def lambda_handler(event, context):
     
     logger.debug('<<{}>> zip_code = "{}"'.format(intent_name, zip_code))
 
-    # 4. if no StreetAddress slot, elicit for it
+    # if no StreetAddress slot, elicit for it
     street_address = None
     streetAddress = slot_values.get('StreetAddress', None)
     if streetAddress is not None:
@@ -63,14 +63,14 @@ def lambda_handler(event, context):
         logger.info('<<{}>> elicitSlot response = {}'.format(intent_name, json.dumps(response)))
         return response
         
-    # 5. convert text to digits in the street address user utterance
+    # convert text to digits in the street address user utterance
     logger.info('<<{}>> raw StreetAddress transcription = {}'.format(intent_name, street_address))
     street_address = parse_address.parse(street_address)
     logger.info('<<{}>> post-processed StreetAddress transcription = {}'.format(intent_name, street_address))
 
     sessionAttributes['inputAddress'] = street_address
 
-    # 6. get (latest) spelled street name
+    # get (latest) spelled street name
     spelled_street_name = None
     spelledStreetName = slot_values.get('SpelledStreetName', None)
     if spelledStreetName is not None:
@@ -88,7 +88,7 @@ def lambda_handler(event, context):
     else:
         spelled_street_name = helpers.get_latest_value('spelled_street_name', sessionAttributes)
 
-    # 7. get (latest) said street name, if available
+    # get (latest) said street name, if available
     street_name = None
     streetName = slot_values.get('StreetName', None)
     if streetName is not None:
@@ -105,7 +105,7 @@ def lambda_handler(event, context):
     else:
         street_name = helpers.get_latest_value('street_name', sessionAttributes)
 
-    # 8. get (latest) street address number, if available
+    # get (latest) street address number, if available
     street_address_number = None
     streetAddressNumber = slot_values.get('StreetAddressNumber', None)
     if streetAddressNumber is not None:
@@ -122,7 +122,7 @@ def lambda_handler(event, context):
     else:
         street_address_number = helpers.get_latest_value('street_address_number', sessionAttributes)
 
-    # 9. prepare the query for Amazon Location Service
+    # prepare the query for Amazon Location Service
     
     # if spelled or said street name available, prepend it to the street address
     if spelled_street_name is not None:
@@ -254,9 +254,10 @@ def lambda_handler(event, context):
     elif confirmationStatus == 'Confirmed': 
         #Put in dynamo table  
         try:
-            table = db.Table(os.environ[ADDRESS_TABLE])
+            table = db.Table(os.environ["ADDRESS_TABLE"])
             table.put_item(Item={'address':resolvedAddress})
-        except:
+        except Exception as error:
+            print(error)
             response_string = 'Table Insert Confirmation error'
             response_message = helpers.format_message_array(response_string, 'PlainText')
             intent['state'] = 'Fulfilled'

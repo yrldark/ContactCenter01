@@ -6,7 +6,8 @@ from aws_cdk import (
     aws_sns as sns,
     aws_lambda as _lambda,
     aws_sns_subscriptions as subscriptions,
-    aws_location_alpha as location
+    aws_location_alpha as location,
+    aws_iam as iam
 )
 import boto3
 
@@ -25,17 +26,15 @@ class CallCenterStack(Stack):
 #-----------------------------------------
         #SNS
 #-----------------------------------------
-        # SNS
 
- #       rescueMessageTopic = sns.Topic(self, "infoMessageTopic",
- #           display_name="Info Message Topic"
- #       )
- #       rescueEmail = ssm.get_parameter(
- #           Name='infoEmail',
- #           WithDecryption=False
- #       )
-#        print(rescueEmail)
-#        rescueMessageTopic.add_subscription(subscriptions.EmailSubscription(rescueEmail['Parameter']['Name']))
+        emailSubscriptionTopic = sns.Topic(self, "emailSubscriptionTopic",
+            display_name="Email Subscription Topic"
+        )
+        #destinationEmail = ssm.get_parameter(
+        #    Name='infoEmail',
+        #   WithDecryption=False
+        #)
+        emailSubscriptionArn = emailSubscriptionTopic.topic_arn
 
 #---------------------------------------
         #PLACE
@@ -45,12 +44,12 @@ class CallCenterStack(Stack):
             place_index_name="AddressPlaceIndex"
         )
 
-        
-
 #---------------------------------------
         #DYNAMODB
 #---------------------------------------
+
         addresstable = dynamodb.Table(self, "addressTable", partition_key=dynamodb.Attribute(name="address", type=dynamodb.AttributeType.STRING))
+
 #---------------------------------------
         #LAMBDAS
 #---------------------------------------
@@ -75,11 +74,21 @@ class CallCenterStack(Stack):
             code = _lambda.Code.from_asset("lambdas/info"),
             environment={ 
                 "INDEX_NAME": place_index.place_index_name,
-                "ADDRESS_TABLE": addresstable.table_name
+                "ADDRESS_TABLE": addresstable.table_name,
+                "TOPIC_ARN": emailSubscriptionArn
             },
             handler='handler.handler'
         )
 
+        
+
         place_index.grant(getInfo, "geo:CreatePlaceIndex")
         place_index.grant(getInfo, "geo:SearchPlaceIndexForText")
         addresstable.grant_write_data(getInfo)
+        getInfoRole = getInfo.role
+
+        getInfoRole.add_to_policy(iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=["sns:Subscribe"],
+            resources=[emailSubscriptionArn],
+        ))
