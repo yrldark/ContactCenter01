@@ -1,5 +1,5 @@
 # Request Info by Mail or Email With AWS Lexbot and Lambda
-**This is a Python project that contains the code for a lambda handler for a Lexbot**
+
 The intended use of the lexbot is to be used within an AWS connect call flow.
 The initial prompt would be in the call flow and then the Lambda codehooks would
 interact back and forth with the caller to determine how they would like to
