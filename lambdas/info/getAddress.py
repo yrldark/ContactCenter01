@@ -255,7 +255,10 @@ def lambda_handler(event, context):
         #Put in dynamo table  
         try:
             table = db.Table(os.environ["ADDRESS_TABLE"])
-            table.put_item(Item={'address':resolvedAddress})
+            table.put_item(Item={'address':sessionAttributes.get('resolvedAddress'),
+                'city': sessionAttributes.get('city_municipality'),
+                'state': sessionAttributes.get('state_province')
+                })
         except Exception as error:
             print(error)
             response_string = 'Table Insert Confirmation error'
@@ -265,7 +268,7 @@ def lambda_handler(event, context):
             logger.info('<<{}>> close response = {}'.format(intent_name, json.dumps(response)))
             return response
 
-        response_string = 'OK, we will mail a brochure to ' + resolvedAddress
+        response_string = 'OK, we will mail a brochure to ' + sessionAttributes.get('resolvedAddress')
         response_message = helpers.format_message_array(response_string, 'PlainText')
         intent['state'] = 'Fulfilled'
         sessionAttributes['addressConfirmed'] = 1
