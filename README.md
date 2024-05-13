@@ -1,65 +1,25 @@
+# This is a Python project that contains the code for a lambda handler for a Lexbot
 
-# Welcome to your CDK Python project!
+The intended use of the lexbot is to be used within an AWS connect call flow.
+The initial prompt would be in the call flow and then the Lambda codehooks would
+interact back and forth with the caller to determine how they would like to
+recieve information, and then react to the request.
 
-You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`call_center_stack`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+The user can use their keypad or say in natural language what they would like
+to do. 
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+Options:
+Press 1 to request a brochure by postal mail
+press 2 to subscribe to email news letters
 
-This project is set up like a standard Python project.  The initialization process also creates
-a virtualenv within this project, stored under the .venv directory.  To create the virtualenv
-it assumes that there is a `python3` executable in your path with access to the `venv` package.
-If for any reason the automatic creation of the virtualenv fails, you can create the virtualenv
-manually once the init process completes.
+**Option 1**
+The bot asks a user to say their address - zip code followed by street address - with reprompting.
+Addresses are validated using the AWS Location service to mitigate incorrect speech-to-text translation.
 
-To manually create a virtualenv on MacOS and Linux:
+The address will then be stored in a table so that it can be used for a mailing list.
 
-```
-$ python -m venv .venv
-```
-
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
-
-```
-$ source .venv/bin/activate
-```
-
-If you are a Windows platform, you would activate the virtualenv like this:
-
-```
-% .venv\Scripts\activate.bat
-```
-
-Once the virtualenv is activated, you can install the required dependencies.
-
-```
-$ pip install -r requirements.txt
-```
-
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ cdk synth
-```
-
-You can now begin exploring the source code, contained in the hello directory.
-There is also a very trivial test included that can be run like this:
-
-```
-$ pytest
-```
-
-To add additional dependencies, for example other CDK libraries, just add to
-your requirements.txt file and rerun the `pip install -r requirements.txt`
-command.
-
-## Useful commands
-
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
-
-Enjoy!
+**Option 2**
+The bot asks a user to say their email address with reprompting.
+The email address is then used to subscribe to an SNS topic to which
+messages can be published.
+![Cloud Architecture](https://github.com/yrldark/ContactCenter01/assets/167708797/1c2177c8-d4e8-48ee-aaff-dee52fda914c)
